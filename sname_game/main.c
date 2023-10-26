@@ -6,13 +6,13 @@ void keyInput();
 int main() {
 	srand(time(NULL));
 	drawBackground();
-	createFood();
 	initSnake();
+	createFood();
 
 	while (1) {
 		keyInput();
 		moveSnake();
-		Sleep(100);
+		Sleep(200);
 		//sizeUp(positions[size]);
 		//positions[0].degree = UP;
 	}

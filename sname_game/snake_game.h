@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <Windows.h>
 
-#define MAP_SIZE 18
-#define SNMAKE_LEN 324
+#define MAP_SIZE 6
+#define SNMAKE_LEN (MAP_SIZE - 2) * (MAP_SIZE - 2)
 #define COUT GetStdHandle(STD_OUTPUT_HANDLE)
 
 typedef struct _Position {

@@ -3,14 +3,14 @@
 Position food = { 0, 0 };
 
 char isInsidePosition(Position);
-void printFood(Position);
 void removeBlock(Position);
 void printBlock(Position, Color);
 char isOverlaySnakeAndNewFood(Position);
 char isAteFood();
 short moveHead();
 void moveBody();
-short isCrashBody();
+short isCrashBody(Position position);
+void finishGame();
 
 void gotoXY(int x, int y) {
 	COORD cur;
@@ -42,32 +42,50 @@ void drawBackground() {
 
 void sizeUp() {
 	size++;
-	positions[size - 1] = positions[size - 2];
+	Position newTail = positions[size - 2];
 	
-	switch (positions[size - 1].degree)
-	{
-	case UP:
-		positions[size - 1].y++;
-		break;
-	case DOWN:
-		positions[size - 1].y--;
-		break;
-	case LEFT:
-		positions[size - 1].x += 2;
-		break;
-	case RIGHT:
-		positions[size - 1].x -= 2;
-		break;
-	}
+	while (1) {
+		Position tempPose = newTail;
+
+		switch (tempPose.degree)
+		{
+		case UP:
+			tempPose.y++;
+			break;
+		case DOWN:
+			tempPose.y--;
+			break;
+		case LEFT:
+			tempPose.x++;
+			break;
+		case RIGHT:
+			tempPose.x--;
+			break;
+		}
+
+		if (isWallCrash(tempPose.x, tempPose.y) || isCrashBody(tempPose)) {
+			newTail.degree++;
+
+			if (newTail.degree > RIGHT) {
+				newTail.degree = UP;
+			}
+		}
+		else {
+			newTail = tempPose;
+			break;
+		}
+	} 
+
+	positions[size - 1] = newTail;
 }
 
 void removeBlock(Position position) {
-	gotoXY(position.x, position.y);
+	gotoXY(position.x * 2, position.y);
 	printf("  ");
 }
 
 void printBlock(Position position, Color color) {
-	gotoXY(position.x, position.y);
+	gotoXY(position.x * 2, position.y);
 	setColor(color);
 
 	printf("□");
@@ -75,7 +93,7 @@ void printBlock(Position position, Color color) {
 
 void initSnake() {
 	for (int i = 0; i < 4; i++) {
-		positions[size] = (Position){ (MAP_SIZE - 2) - (i * 2), ((MAP_SIZE - 2) / 2), RIGHT};
+		positions[size] = (Position){ ((MAP_SIZE - 2) / 2) - i, ((MAP_SIZE - 2) / 2), RIGHT};
 		printBlock(positions[size], GREEN);
 		size++;
 	}
@@ -111,12 +129,15 @@ void moveBody() {
 }
 
 void moveSnake() {
+	short isMove = moveHead();
+	short isCreateFood = 0;
+
+
 	if (isAteFood()) {
 		sizeUp();
-		createFood();
-	}
 
-	short isMove = moveHead();
+		isCreateFood = 1;
+	}
 
 	if (isMove) {
 		moveBody();
@@ -127,6 +148,14 @@ void moveSnake() {
 	}
 	else {
 		// TODO: program exit
+	}
+
+	if (size == SNMAKE_LEN) {
+		finishGame();
+	}
+
+	if (isCreateFood) {
+		createFood();
 	}
 }
 
@@ -145,7 +174,7 @@ short isCrashBody(Position position) {
 }
 
 char wallX(int x) {
-	if (0 < x && x < MAP_SIZE * 2 - 2) {
+	if (0 < x && x < MAP_SIZE - 1) {
 		return 0;
 	}
 	else {
@@ -172,10 +201,10 @@ void setPositionDegree(Position* position) {
 		position->y++;
 		break;
 	case LEFT:
-		position->x -= 2;
+		position->x--;
 		break;
 	case RIGHT:
-		position->x += 2;
+		position->x++;
 		break;
 	}
 }
@@ -192,9 +221,9 @@ void previousDegree(int cur, int pre) {
 
 void createFood() {
 	while (1) {
-		food.x = rand() % MAP_SIZE * 2;
-		food.y = rand() % MAP_SIZE;
-
+		food.x = rand() % (MAP_SIZE - 2) + 1;
+		food.y = rand() % (MAP_SIZE - 2) + 1;
+		printBlock(food, YELLOW);
 		if (isInsidePosition(food) && !isOverlaySnakeAndNewFood(food)) {
 			printBlock(food, RED);
 			break;
@@ -226,4 +255,11 @@ char isOverlaySnakeAndNewFood(Position position) {
 
 char isAteFood() {
 	return positions[0].x == food.x & positions[0].y == food.y;
+}
+
+void finishGame() {
+	gotoXY(0, MAP_SIZE + 2);
+	setColor(YELLOW);
+	system("pause");
+	exit(0);
 }
